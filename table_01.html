@@ -6,66 +6,176 @@
   <title>Your Journey 시간표</title>
 
   <style>
-    body{
-      margin:0;
-      background:#0b1220;
-      color:#fff;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+    :root{
+      --bg:#0b1220;
+      --line:rgba(255,255,255,.14);
+      --btn:rgba(255,255,255,.08);
+      --btnHover:rgba(255,255,255,.12);
+      --text:#ffffff;
     }
 
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 30% 0%, rgba(127,90,240,.22), transparent 55%),
+        radial-gradient(900px 520px at 80% 10%, rgba(80,170,255,.18), transparent 55%),
+        var(--bg);
+    }
+
+    /* 상단 고정 바 */
     .topbar{
-      position: sticky;
+      position: fixed;
       top: 0;
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      padding: 14px;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      height: 74px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+
+      padding: 12px 14px;
       background: rgba(0,0,0,.55);
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
     }
 
     .btn{
-      padding: 10px 18px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
-      color: #fff;
+      padding: 11px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--btn);
+      color: var(--text);
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
-      transition: .15s;
+      transition: .15s ease;
+      user-select:none;
     }
-    .btn:hover{ background: rgba(255,255,255,.12); }
+    .btn:hover{ background: var(--btnHover); }
     .btn.active{
       background:#fff;
       color:#111;
       border-color: transparent;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
     }
 
+    /* 본문 */
     .content{
+      padding-top: 92px;  /* ← 고정 topbar 안 가리게 */
+      padding-left: 18px;
+      padding-right: 18px;
+      padding-bottom: 34px;
+
       display:flex;
       justify-content:center;
-      padding: 20px;
+    }
+
+    .card{
+      width: min(1000px, 100%);
+      border-radius: 18px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 22px 60px rgba(0,0,0,.45);
+    }
+
+    .imgWrap{
+      padding: 14px;
+      background: rgba(0,0,0,.14);
     }
 
     img{
+      display:block;
       width:100%;
-      max-width: 980px;
-      border-radius: 16px;
+      height:auto;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,.10);
-      box-shadow: 0 20px 50px rgba(0,0,0,.45);
       background: rgba(255,255,255,.03);
+    }
+
+    .foot{
+      padding: 10px 14px 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,.70);
+      text-align:center;
+    }
+
+    /* 모바일 버튼 조금 작게 */
+    @media (max-width: 420px){
+      .btn{ padding:10px 14px; font-size:15px; border-radius:14px; }
+      .topbar{ height:70px; }
+      .content{ padding-top: 88px; }
     }
   </style>
 </head>
 
 <body>
+
   <div class="topbar">
     <button class="btn active" data-type="elem">초등</button>
     <button class="btn" data-type="midd">중등</button>
     <button class="btn" data-type="high">고등</button>
   </div>
 
-  <div class="content">
-    <img id="view" src="images/e
+  <main class="content">
+    <section class="card">
+      <div class="imgWrap">
+        <img id="view" src="images/elem.png" alt="초등 시간표" />
+      </div>
+      <div class="foot">
+        버튼 눌러서 시간표 전환 · 이미지가 안 뜨면 파일명/경로 확인 (images/elem.png, images/midd.png, images/high.png)
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const map = {
+      elem: { src: "images/elem.png", alt: "초등 시간표" },
+      midd: { src: "images/midd.png", alt: "중등 시간표" },
+      high: { src: "images/high.png", alt: "고등 시간표" },
+    };
+
+    const img = document.getElementById("view");
+    const buttons = document.querySelectorAll(".btn");
+
+    function setActive(type){
+      const item = map[type];
+      if(!item) return;
+
+      // 캐시 방지 (업데이트 바로 반영)
+      img.src = item.src + "?v=" + Date.now();
+      img.alt = item.alt;
+
+      buttons.forEach(b => b.classList.remove("active"));
+      document.querySelector(`.btn[data-type="${type}"]`)?.classList.add("active");
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => setActive(btn.dataset.type));
+    });
+
+    img.addEventListener("error", () => {
+      alert(
+        "이미지 로드 실패!\n\n" +
+        "요청 경로: " + img.src + "\n\n" +
+        "확인할 것:\n" +
+        "1) images 폴더가 table_01.html과 같은 레벨인지\n" +
+        "2) 파일명이 정확히 elem.png / midd.png / high.png 인지\n" +
+        "3) Ctrl+F5 강력 새로고침"
+      );
+    });
+
+    // 첫 화면은 초등 (원하면 'midd'로 바꿔)
+    setActive("elem");
+  </script>
+
+</body>
+</html>
